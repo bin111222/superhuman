@@ -14,34 +14,46 @@ struct BiometricsInputView: View {
     private let weightRange: ClosedRange<Double> = 30...200 // kg
     
     var body: some View {
-        VStack(spacing: 30) {
-            titleSection
+        ZStack {
+            NoiseGradient(colors: [
+                Color(hex: "0F2027"),
+                Color(hex: "203A43"),
+                Color(hex: "2C5364")
+            ])
             
-            measurementToggle
-            
-            biometricsSection
-            
-            nextButton
+            VStack(spacing: 0) {
+                titleSection
+                    .padding(.top, 60)
+                    .padding(.bottom, 40)
+                
+                measurementToggle
+                    .padding(.bottom, 50)
+                
+                measurementsSection
+                
+                Spacer()
+                
+                pageIndicator
+                    .padding(.bottom, 30)
+            }
+            .padding(.horizontal)
         }
-        .padding()
         .onAppear { startAnimation() }
     }
     
     private var titleSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             Text("Your Measurements")
-                .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                .font(.system(.title, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
-                .opacity(isAnimating ? 1 : 0)
-                .offset(y: isAnimating ? 0 : 20)
             
             Text("Help us personalize your fitness journey")
-                .font(.system(.title3, design: .rounded))
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .opacity(isAnimating ? 1 : 0)
-                .offset(y: isAnimating ? 0 : 20)
         }
+        .opacity(isAnimating ? 1 : 0)
+        .offset(y: isAnimating ? 0 : 20)
         .animation(.spring(duration: 0.7, bounce: 0.4).delay(0.1), value: isAnimating)
     }
     
@@ -53,21 +65,20 @@ struct BiometricsInputView: View {
         .pickerStyle(.segmented)
         .frame(width: 200)
         .opacity(isAnimating ? 1 : 0)
-        .animation(.spring(duration: 0.7, bounce: 0.4).delay(0.2), value: isAnimating)
-        .onChange(of: isMetric) { _, newValue in
+        .onChange(of: isMetric) { _, _ in
             updateMeasurements()
         }
     }
     
-    private var biometricsSection: some View {
+    private var measurementsSection: some View {
         VStack(spacing: 40) {
-            // Height Selector
-            VStack(spacing: 20) {
+            // Height
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Image(systemName: "ruler.fill")
-                        .font(.title2)
+                        .foregroundColor(.secondary)
                     Text("Height")
-                        .font(.title3.bold())
+                        .foregroundColor(.secondary)
                 }
                 
                 if isMetric {
@@ -77,13 +88,13 @@ struct BiometricsInputView: View {
                 }
             }
             
-            // Weight Selector
-            VStack(spacing: 20) {
+            // Weight
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Image(systemName: "scalemass.fill")
-                        .font(.title2)
+                        .foregroundColor(.secondary)
                     Text("Weight")
-                        .font(.title3.bold())
+                        .foregroundColor(.secondary)
                 }
                 
                 if isMetric {
@@ -94,24 +105,24 @@ struct BiometricsInputView: View {
             }
         }
         .opacity(isAnimating ? 1 : 0)
-        .offset(y: isAnimating ? 0 : 50)
-        .animation(.spring(duration: 0.7, bounce: 0.4).delay(0.3), value: isAnimating)
+        .offset(y: isAnimating ? 0 : 30)
+        .animation(.spring(duration: 0.7, bounce: 0.4).delay(0.2), value: isAnimating)
     }
     
     private var heightSliderMetric: some View {
-        VStack {
+        VStack(spacing: 8) {
             Text("\(Int(localHeight)) cm")
                 .font(.system(.title, design: .rounded, weight: .bold))
-                .foregroundColor(userSettings.gender == .male ? AppTheme.maleBlue : AppTheme.femalePurple)
+                .foregroundColor(.white)
             
-            CustomSlider(value: $localHeight, range: heightRange) { value in
+            EnhancedSlider(value: $localHeight, range: heightRange) { value in
                 userSettings.height = value
             }
         }
     }
     
     private var heightSliderImperial: some View {
-        VStack {
+        VStack(spacing: 8) {
             HStack(spacing: 4) {
                 Picker("Feet", selection: $heightFeet) {
                     ForEach(2...7, id: \.self) { feet in
@@ -129,54 +140,38 @@ struct BiometricsInputView: View {
                 .pickerStyle(.wheel)
                 .frame(width: 100)
             }
-            .onChange(of: heightFeet) { _, newValue in 
-                updateHeightFromImperial()
-            }
-            .onChange(of: heightInches) { _, newValue in 
-                updateHeightFromImperial()
-            }
+            .onChange(of: heightFeet) { _, _ in updateHeightFromImperial() }
+            .onChange(of: heightInches) { _, _ in updateHeightFromImperial() }
         }
     }
     
     private var weightSliderMetric: some View {
-        VStack {
+        VStack(spacing: 8) {
             Text("\(Int(localWeight)) kg")
                 .font(.system(.title, design: .rounded, weight: .bold))
-                .foregroundColor(userSettings.gender == .male ? AppTheme.maleBlue : AppTheme.femalePurple)
+                .foregroundColor(.white)
             
-            CustomSlider(value: $localWeight, range: weightRange) { value in
+            EnhancedSlider(value: $localWeight, range: weightRange) { value in
                 userSettings.weight = value
             }
         }
     }
     
     private var weightSliderImperial: some View {
-        VStack {
+        VStack(spacing: 8) {
             Text("\(Int(localWeight * 2.20462)) lbs")
                 .font(.system(.title, design: .rounded, weight: .bold))
-                .foregroundColor(userSettings.gender == .male ? AppTheme.maleBlue : AppTheme.femalePurple)
+                .foregroundColor(.white)
             
-            CustomSlider(value: $localWeight, range: weightRange) { value in
+            EnhancedSlider(value: $localWeight, range: weightRange) { value in
                 userSettings.weight = value
             }
         }
     }
     
-    private var nextButton: some View {
-        Button(action: proceedToNext) {
-            Text("Continue")
-                .font(.system(.body, design: .rounded, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 200)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(userSettings.gender == .male ? AppTheme.maleBlue : AppTheme.femalePurple)
-                )
-        }
-        .opacity(isAnimating ? 1 : 0)
-        .offset(y: isAnimating ? 0 : 20)
-        .animation(.spring(duration: 0.7, bounce: 0.4).delay(0.4), value: isAnimating)
+    private var pageIndicator: some View {
+        PageIndicator(currentPage: 1, totalPages: 4)
+            .opacity(isAnimating ? 1 : 0)
     }
     
     private func startAnimation() {
@@ -221,62 +216,6 @@ struct BiometricsInputView: View {
         withAnimation {
             onboardingState.nextPage()
         }
-    }
-}
-
-struct CustomSlider: View {
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let onEditingChanged: (Double) -> Void
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(height: 6)
-                    .cornerRadius(3)
-                
-                Rectangle()
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [AppTheme.teal, AppTheme.maleBlue]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ))
-                    .frame(width: self.getProgressWidth(geometry: geometry), height: 6)
-                    .cornerRadius(3)
-                
-                Circle()
-                    .fill(.white)
-                    .frame(width: 24, height: 24)
-                    .shadow(radius: 4)
-                    .offset(x: self.getThumbOffset(geometry: geometry))
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { gesture in
-                                self.updateValue(geometry: geometry, location: gesture.location)
-                            }
-                    )
-            }
-        }
-        .frame(height: 24)
-    }
-    
-    private func getProgressWidth(geometry: GeometryProxy) -> CGFloat {
-        let percent = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
-        return geometry.size.width * CGFloat(percent)
-    }
-    
-    private func getThumbOffset(geometry: GeometryProxy) -> CGFloat {
-        let percent = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
-        return geometry.size.width * CGFloat(percent) - 12
-    }
-    
-    private func updateValue(geometry: GeometryProxy, location: CGPoint) {
-        let percent = max(0, min(1, location.x / geometry.size.width))
-        let newValue = range.lowerBound + (range.upperBound - range.lowerBound) * Double(percent)
-        value = newValue
-        onEditingChanged(newValue)
     }
 }
 
